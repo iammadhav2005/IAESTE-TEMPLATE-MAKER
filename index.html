@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>IAESTE — Template Generator</title>
+  <style>
+    :root{--bg:#071e16;--card:#163b2f;--accent:#2f7f59;--muted:#bcd6c4;--white:#fff}
+    body{font-family:Inter,system-ui,Segoe UI,Arial;background:linear-gradient(180deg,#052017 0%,#083223 100%);color:var(--muted);margin:0;padding:24px;}
+    .wrap{max-width:980px;margin:0 auto}
+    h1{color:var(--white);margin:0 0 18px;font-size:24px}
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:18px}
+    label{display:block;margin:10px 0 6px;font-weight:600;color:var(--muted)}
+    input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:#04241b;color:var(--muted)}
+    textarea{min-height:90px;resize:vertical}
+    button{cursor:pointer;padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:var(--white);font-weight:700}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.06);color:var(--muted)}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .preview{background:var(--card);padding:18px;border-radius:12px;border:2px solid rgba(0,0,0,.5);min-height:520px;color:var(--white)}
+    /* template content inside preview */
+    .tpl{font-family: 'Poppins',Arial,Helvetica, sans-serif}
+    .hero{background:#071e16;padding:28px;border-radius:10px;text-align:center}
+    .hero h2{font-size:34px;margin:0 0 8px}
+    .hero p{margin:0 0 14px;color:#dbeee0}
+    .cta{display:flex;gap:12px;justify-content:center;margin-top:8px}
+    .cta a{display:inline-block;padding:12px 18px;border-radius:8px;background:#2c8b5f;color:white;text-decoration:none;font-weight:700}
+    .card{background:rgba(255,255,255,.04);padding:16px;border-radius:10px;margin-top:16px}
+    .card h3{margin:4px 0 10px}
+    .footer{display:flex;justify-content:space-between;align-items:center;margin-top:18px;color:#bcd6c4}
+    pre{white-space:pre-wrap;word-wrap:break-word}
+    .note{font-size:13px;color:#cfe9d4}
+    @media(max-width:980px){.grid{grid-template-columns:1fr;margin-bottom:20px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>IAESTE — Automatic Template Maker</h1>
+    <div class="grid">
+      <div>
+        <label>Country names (comma separated)<small> — will be shown in the template</small></label>
+        <input id="countries" value="Austria, Panama, Philippines" />
+
+        <label>Deadline (format: <em>30th July 2025 (8:00 p.m.)</em>)</label>
+        <input id="deadline" value="30th July 2025 (8:00 p.m.)" />
+
+        <label>Offers link (will be embedded in "Offers" button)</label>
+        <input id="offersLink" value="https://drive.google.com/drive/folders/1psbEc0jnA-L9u5E-u82dkBQtXQfQ2UPg" />
+
+        <label>Factsheet & Instructions link (embedded in "Instructions and Factsheet" button)</label>
+        <input id="factsLink" value="https://drive.google.com/drive/folders/1iemum4QJkuW9HkKyN_gnPY3DO9Fa2XRu?usp=sharing" />
+
+        <div class="controls">
+          <button id="gen">Generate Preview</button>
+          <button id="copy" class="btn-ghost">Copy HTML</button>
+          <button id="download" class="btn-ghost">Download .html</button>
+          <button id="mailto" class="btn-ghost">Open Mail Composer</button>
+        </div>
+
+        <p class="note">After downloading you can attach the file to an email to <strong>admin.iaeste@karunya.edu.in</strong> or paste the HTML into Gmail's "Insert HTML" using a browser extension. I can't send emails for you — this tool prepares the ready-to-send HTML.</p>
+      </div>
+
+      <div class="preview" id="preview">
+        <!-- live preview will render here -->
+        <div class="tpl" id="tpl-root">
+          <!-- initial template inserted by JS -->
+        </div>
+      </div>
+    </div>
+
+    <details style="margin-top:18px;color:var(--muted)"><summary style="cursor:pointer">How to use</summary>
+      <ol>
+        <li>Change countries / links / deadline on the left.</li>
+        <li>Click "Generate Preview" to see the email template on the right.</li>
+        <li>Click "Copy HTML" to copy full HTML to clipboard or "Download .html" to save a file.</li>
+        <li>Attach or paste the saved HTML into your email client and send to <strong>admin.iaeste@karunya.edu.in</strong>.</li>
+      </ol>
+    </details>
+  </div>
+
+<script>
+  const tplRoot = document.getElementById('tpl-root');
+  const countriesInput = document.getElementById('countries');
+  const deadlineInput = document.getElementById('deadline');
+  const offersInput = document.getElementById('offersLink');
+  const factsInput = document.getElementById('factsLink');
+
+  function buildTemplate({countries, deadline, offersLink, factsLink}){
+    const countriesList = countries.split(',').map(s=>s.trim()).filter(Boolean);
+    const countryHtml = countriesList.length ? countriesList.map(c=>`<li>${escapeHtml(c)}</li>`).join('') : '<li>Various Countries</li>';
+
+    return `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>IAESTE Offers</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;background:#071e16;color:#e6efe6;margin:0;padding:0}
+.container{max-width:680px;margin:0 auto;padding:28px;background:linear-gradient(180deg,#06281f,#07372a);}
+.header{ text-align:center }
+.h1{font-size:36px;letter-spacing:2px;font-weight:800}
+.sub{font-size:14px;margin-top:6px;color:#cfe9d4}
+.hero{background:rgba(255,255,255,0.03);padding:18px;border-radius:8px;margin-top:18px}
+.hero h2{margin:0 0 6px;font-size:22px}
+.btns{display:flex;gap:12px;justify-content:center;margin-top:14px}
+.btn{display:inline-block;padding:12px 18px;border-radius:8px;background:#2c8b5f;color:white;text-decoration:none;font-weight:700}
+.card{background:rgba(0,0,0,0.25);padding:16px;border-radius:8px;margin-top:18px}
+ul.countries{margin:6px 0 0 18px}
+.dead{background:#2b8457;padding:12px;border-radius:6px;text-align:center;margin-top:14px}
+.footer{margin-top:18px;font-size:13px;color:#cfe9d4}
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="h1">COBE OFFERS 2025</div>
+      <div class="sub">Continuous Online-Based Exchange — FROM IAESTE LC KARUNYA</div>
+    </div>
+
+    <div class="hero">
+      <h2>Exciting International Internship Alert!</h2>
+      <p>Opportunities available in:</p>
+      <ul class="countries">${countryHtml}</ul>
+      <div class="btns">
+        <a class="btn" href="${escapeAttr(offersLink)}" target="_blank">Offers</a>
+        <a class="btn" href="${escapeAttr(factsLink)}" target="_blank">Instructions and Factsheet</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Kindly submit your factsheet soon to not miss this opportunity.</strong>
+      <div class="dead">Deadline Alert!<br/>The last date to submit your Factsheet is <strong>${escapeHtml(deadline)}</strong></div>
+    </div>
+
+    <div class="card">
+      <h3>Steps to apply</h3>
+      <ol>
+        <li>Submit your Documents — Factsheet & Parent Undertaking Letter.</li>
+        <li>Include: Full Name, Contact Number, Class Attendance %, Nationality of Passport, Passport Expiry Date, Order of Preference (if applying for multiple offers).</li>
+      </ol>
+    </div>
+
+    <div class="footer">Contact: admin.iaeste@karunya.edu.in</div>
+  </div>
+</body>
+</html>`;
+  }
+
+  function escapeHtml(s){return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function escapeAttr(s){return (s+'').replace(/"/g,'%22')}
+
+  function renderPreview(){
+    const data = {countries: countriesInput.value, deadline: deadlineInput.value, offersLink: offersInput.value, factsLink: factsInput.value};
+    const html = buildTemplate(data);
+    // show inside preview as rendered HTML
+    tplRoot.innerHTML = html;
+    return html;
+  }
+
+  document.getElementById('gen').addEventListener('click', ()=>{
+    renderPreview();
+  });
+
+  document.getElementById('copy').addEventListener('click', async ()=>{
+    const html = renderPreview();
+    try{
+      await navigator.clipboard.writeText(html);
+      alert('Full HTML copied to clipboard. You can paste it into an email or save as .html');
+    }catch(e){
+      alert('Copy failed — browser blocked clipboard. Use Download instead.');
+    }
+  });
+
+  document.getElementById('download').addEventListener('click', ()=>{
+    const html = renderPreview();
+    const blob = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'iaeste_offers_template.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+
+  document.getElementById('mailto').addEventListener('click', ()=>{
+    // mailto with instructions. browsers restrict attaching files automatically.
+    const subject = encodeURIComponent('IAESTE Offers Template');
+    const body = encodeURIComponent('Hi admin%0A%0AI have generated the IAESTE offers template. Please find the HTML file attached (or pasted) with this email.\n\nSteps to send:%0A1) Download the generated HTML file using the generator.%0A2) Attach the file to this email OR paste the raw HTML into the email body if your client supports it.%0A%0ARegards,%0A(Your Name)');
+    window.location.href = `mailto:admin.iaeste@karunya.edu.in?subject=${subject}&body=${body}`;
+  });
+
+  // initial render
+  renderPreview();
+</script>
+</body>
+</html>`;
+  }
+
+  // populate initial preview on page load
+  document.getElementById('gen').click();
+</script>
